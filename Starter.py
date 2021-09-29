@@ -64,12 +64,14 @@ class Starter:
         self.sortClientDateTotal()
         self.combineYear()
         self.extractClientDateTotal(['client_id', 'invoice_date', 'total'])
+        self.totalSpending()
 
     def totalSpending(self):
         """
         Aggregate the total spending during a year for each client
+        TODO: Incorporate the invoice date and client id
         """
-        self.df = self.df.groupby(['invoice_date', 'client_id']).sum()
+        self.df = self.df.groupby(['invoice_date', 'client_id'], as_index=False).sum()
 
 
     def byClient(self):
@@ -77,9 +79,21 @@ class Starter:
         Breaks the data into chunks according to client
         TODO: Find a faster way to group the data by changing iter into something else
         """
-        return dict(iter(self.df.groupby('client_id')))
+        return dict(iter(self.df.groupby('client_id', as_index=False)))
 
-
+    def plotGraph(self, id):
+        """
+        Generates a sales-trend graph from a client ID
+        Inputs: An int client_id
+        TODO: It wouldn't make sense if 2021 data is included in the regression. Make sure to
+        not include 2021 data
+        """
+        dic = self.byClient()
+        pl.plot(dic[id].invoice_date, dic[id].total)
+        pl.title("Client ID: " + str(id))
+        pl.xlabel('year')
+        pl.ylabel('total spending')
+        pl.show()
 
 
 
