@@ -10,9 +10,15 @@ class Starter:
     def __init__(self):
         """
         initializer
+        TODO: Tidy up how the dataframes are stored, have one dataframe that is unchanged throughout the functions for reference
         """
         self.path = "invoices.csv"
         self.df = self.loadInvoices()
+        self.rf = self.loadInvoices()
+        self.quantity = [] # Quantity dataframe
+        self.ap = [] # Average price
+        self.pr = [] # Price reference
+        self.ps = [] # Price sensitivity
         self.prelim()
 
 
@@ -45,6 +51,8 @@ class Starter:
         """
         self.df['invoice_date'] = self.df['invoice_date'].map(lambda x: x[0:4], na_action = 'ignore')
         self.df.loc[self.df.invoice_date == '6201', 'invoice_date'] = self.df.invoice_date[self.df.invoice_date == '6201'].map(lambda x: '2016', na_action = 'ignore')
+        self.rf['invoice_date'] = self.rf['invoice_date'].map(lambda x: x[0:4], na_action = 'ignore')
+        self.rf.loc[self.rf.invoice_date == '6201', 'invoice_date'] = self.rf.invoice_date[self.rf.invoice_date == '6201'].map(lambda x: '2016', na_action = 'ignore')
 
     def extractClientDateTotal(self, lst):
         """
@@ -52,6 +60,12 @@ class Starter:
         Inputs: lst, a list of strings indicating the columns to select
         """
         self.df = self.df[lst]
+
+    def extractClientDateItemTotal(self, lst):
+        self.rf = self.rf[lst]
+
+    def extractClientDateItemQuantity(self, lst):
+        self.quantity = self.rf[lst]
 
     def prelim(self):
         """
@@ -64,6 +78,8 @@ class Starter:
         self.sortClientDateTotal()
         self.combineYear()
         self.extractClientDateTotal(['client_id', 'invoice_date', 'total'])
+        self.extractClientDateItemQuantity(['client_id', 'invoice_date', 'item__name', 'quantity'])         
+        self.extractClientDateItemTotal(['client_id', 'invoice_date', 'item__name', 'total'])
         self.totalSpending()
 
     def totalSpending(self):
@@ -95,5 +111,38 @@ class Starter:
         pl.ylabel('total spending')
         pl.show()
 
+    def averagePrice(self):
+        """
+        Gets the average price paid by a customer for a certain product in a particular year
+        TODO: Clean up data. Some of the items are not standardized products and should be taken out of the dataframe
+        """
+        self.ap = self.rf.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum()
+        self.ap['average_price'] = self.rf.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum().total / self.quantity.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum().quantity
+        self.ap['quantity'] = self.quantity.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum().quantity
 
+    def averagePrice(self):
+        """
+        Gets the average price paid by a customer for a certain product in a particular year
+        TODO: Clean up data. Some of the items are not standardized products and should be taken out of the dataframe
+        """
+        self.ap = self.rf.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum()
+        self.ap['quantity'] = self.quantity.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum().quantity        
+        self.ap['average_price'] = self.rf.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum().total / self.quantity.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum().quantity
+
+    def priceRef(self):
+        """
+        Gets the average price paid by all customers for a certain product in a particular year
+        TODO: Take out the client ID. It is irrelevant
+        """
+        self.pr = self.rf.groupby(['invoice_date', 'item__name'], as_index=False).sum()
+        self.pr['quantity'] = self.quantity.groupby(['invoice_date', 'item__name'], as_index=False).sum().quantity
+        self.pr['average_price'] = self.rf.groupby(['invoice_date', 'item__name'], as_index=False).sum().total / self.quantity.groupby(['invoice_date', 'item__name'], as_index=False).sum().quantity
+
+    def priceSensitivity(self):
+        """
+        Gets the price sensitivity by comparing the individual price paid to the aggregate average price paid
+        TODO: Complete the function
+        """
+        self.ps = self.pr
+        #self.ps['sensitvity'] = /self.pr[item__name[]
 
