@@ -81,6 +81,9 @@ class Starter:
         self.extractClientDateItemQuantity(['client_id', 'invoice_date', 'item__name', 'quantity'])         
         self.extractClientDateItemTotal(['client_id', 'invoice_date', 'item__name', 'total'])
         self.totalSpending()
+        self.averagePrice()
+        self.priceRef()
+        self.priceSensitivity()
 
     def totalSpending(self):
         """
@@ -117,32 +120,25 @@ class Starter:
         TODO: Clean up data. Some of the items are not standardized products and should be taken out of the dataframe
         """
         self.ap = self.rf.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum()
-        self.ap['average_price'] = self.rf.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum().total / self.quantity.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum().quantity
-        self.ap['quantity'] = self.quantity.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum().quantity
-
-    def averagePrice(self):
-        """
-        Gets the average price paid by a customer for a certain product in a particular year
-        TODO: Clean up data. Some of the items are not standardized products and should be taken out of the dataframe
-        """
-        self.ap = self.rf.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum()
         self.ap['quantity'] = self.quantity.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum().quantity        
         self.ap['average_price'] = self.rf.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum().total / self.quantity.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum().quantity
+        self.ap = self.ap[['invoice_date', 'item__name', 'average_price', 'client_id']]
 
     def priceRef(self):
         """
         Gets the average price paid by all customers for a certain product in a particular year
-        TODO: Take out the client ID. It is irrelevant
         """
         self.pr = self.rf.groupby(['invoice_date', 'item__name'], as_index=False).sum()
         self.pr['quantity'] = self.quantity.groupby(['invoice_date', 'item__name'], as_index=False).sum().quantity
-        self.pr['average_price'] = self.rf.groupby(['invoice_date', 'item__name'], as_index=False).sum().total / self.quantity.groupby(['invoice_date', 'item__name'], as_index=False).sum().quantity
+        self.pr['average_price_ref'] = self.rf.groupby(['invoice_date', 'item__name'], as_index=False).sum().total / self.quantity.groupby(['invoice_date', 'item__name'], as_index=False).sum().quantity
+        self.pr = self.pr[['invoice_date', 'item__name', 'average_price_ref']]
 
     def priceSensitivity(self):
         """
         Gets the price sensitivity by comparing the individual price paid to the aggregate average price paid
-        TODO: Complete the function
         """
-        self.ps = self.pr
-        self.ps['sensitvity'] = /self.pr[item__name[]
+        self.ps = self.ap
+        self.ps = self.ap.merge(self.pr, how = 'left')
+        self.ps['price_sensitivity'] = self.ps.average_price/self.ps.average_price_ref
+        
 
