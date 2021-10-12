@@ -62,7 +62,7 @@ class Starter:
         self.df = self.df[lst]
 
     def extractClientDateItemTotal(self, lst):
-        self.rf = self.rf[lst]
+        self.ap = self.rf[lst]
 
     def extractClientDateItemQuantity(self, lst):
         self.quantity = self.rf[lst]
@@ -78,8 +78,8 @@ class Starter:
         self.sortClientDateTotal()
         self.combineYear()
         self.extractClientDateTotal(['client_id', 'invoice_date', 'total'])
-        self.extractClientDateItemQuantity(['client_id', 'invoice_date', 'item__name', 'quantity'])         
-        self.extractClientDateItemTotal(['client_id', 'invoice_date', 'item__name', 'total'])
+        self.extractClientDateItemQuantity(['client_id', 'item__category__name', 'invoice_date', 'item__name', 'quantity'])         
+        self.extractClientDateItemTotal(['client_id', 'item__category__name', 'invoice_date', 'item__name', 'total'])
         self.totalSpending()
         self.averagePrice()
         self.priceRef()
@@ -119,7 +119,12 @@ class Starter:
         Gets the average price paid by a customer for a certain product in a particular year
         TODO: Clean up data. Some of the items are not standardized products and should be taken out of the dataframe
         """
-        self.ap = self.rf.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum()
+        self.ap = self.ap.loc[self.ap.item__category__name != 'Service']
+        self.ap = self.ap.loc[self.ap.item__category__name.notna()]
+        self.ap = self.ap.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum()
+        self.quantity = self.quantity.loc[self.quantity.item__category__name != 'Service']
+        self.quantity = self.quantity.loc[self.quantity.item__category__name.notna()]
+        self.quantity = self.quantity.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum()
         self.ap['quantity'] = self.quantity.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum().quantity        
         self.ap['average_price'] = self.rf.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum().total / self.quantity.groupby(['invoice_date', 'client_id', 'item__name'], as_index=False).sum().quantity
         self.ap = self.ap[['invoice_date', 'item__name', 'average_price', 'client_id']]
