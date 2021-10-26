@@ -19,6 +19,12 @@ class Starter:
         self.ap = [] # Average price
         self.pr = [] # Price reference
         self.ps = [] # Price sensitivity
+        self.ac = [] # Acreage Data
+        self.ds = [] # Diesel Spending
+        self.ss = [] # Diesel Spending
+        self.fs = [] # Diesel Spending
+        self.cs = [] # Diesel Spending
+        self.ps = [] # Diesel Spending
         self.prelim()
 
 
@@ -84,6 +90,8 @@ class Starter:
         self.averagePrice()
         self.priceRef()
         self.priceSensitivity()
+        self.loadAcres()
+        self.itemSpending()
 
     def totalSpending(self):
         """
@@ -145,5 +153,16 @@ class Starter:
         self.ps = self.ap
         self.ps = self.ap.merge(self.pr, how = 'left')
         self.ps['price_sensitivity'] = self.ps.average_price/self.ps.average_price_ref
-        
 
+    def loadAcres(self):
+        self.ac = self.loadDataframe('Claremont Acreage Data.csv')
+    
+    def mergeAcres(self):
+        self.ac = pd.merge(self.rf, self.ac, on = 'client_id', how = 'left')
+
+    def itemSpending(self):
+        self.ds = self.rf[self.rf['item__name'].str.contains('Diesel') == True]
+        self.ss = self.rf[self.rf['item__name'].str.contains('Seed') == True]
+        self.fs = self.rf[self.rf['item__name'].str.contains('Fertilizer') == True]
+        self.cs = self.rf[self.rf['item__name'].str.contains('Chemical') == True]        
+        self.ps = self.rf[self.rf['item__name'].str.contains('Propane') == True]
